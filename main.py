@@ -5,6 +5,7 @@ from prompts import Prompts
 from report_agent import ReportAgent
 from database import Database
 from streamlit_aux import Streamlit
+import constants as c
 
 st_aux = Streamlit()
 db = Database()
@@ -13,6 +14,7 @@ prompts = Prompts()
 llm = LLM()
 
 container_height = 780
+image_url = c.SAMPLE_IMAGE
 
 # ----------------- SESSION STATE -----------------
 if "history" not in st.session_state:
@@ -43,7 +45,7 @@ cases_df = db.generate_samples(3)
 st.title("🏥 AI-Powered Radiology Workstation")
 
 # --- MAIN LAYOUT ---
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2, col3 = st.columns([0.8, 0.8, 1])
 
 # --- WORKLIST & VIEWER ---
 with col1:
@@ -51,6 +53,7 @@ with col1:
         st.subheader("📋 Patient Worklist")
 
         cols_cases = st.columns(len(cases_df))
+        sample_case_url = "https://upload.wikimedia.org/wikipedia/commons/a/a1/Normal_posteroanterior_%28PA%29_chest_radiograph_%28X-ray%29.jpg"
         for idx, row in cases_df.iterrows():
             with cols_cases[idx]:
                 if st.button(f'{row["Patient ID"]}', key=f'select_{idx}'):
@@ -65,14 +68,17 @@ with col1:
         image_source = st.radio("Select image source:", ["Sample Image", "Upload Image", "Image URL"], horizontal=True)
 
         if image_source == "Sample Image":
-            image_url = "https://upload.wikimedia.org/wikipedia/commons/a/a1/Normal_posteroanterior_%28PA%29_chest_radiograph_%28X-ray%29.jpg"
             img = st_aux.load_image_from_url(image_url)
+            st.session_state.current_case_url = image_url
         elif image_source == "Upload Image":
             uploaded_file = st.file_uploader("Choose an image file", type=['png', 'jpg', 'jpeg'])
             img = st_aux.load_image_from_upload(uploaded_file)
+            # TODO. Need to find a way to expose image url. the code below shows a fake image
+            st.session_state.current_case_url = image_url
         else:
             url = st.text_input("Enter image URL:")
             img = st_aux.load_image_from_url(url) if url else None
+            st.session_state.current_case_url = url
 
         if img:
             st.image(img, use_container_width=True)

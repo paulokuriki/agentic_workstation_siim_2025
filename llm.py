@@ -3,7 +3,6 @@ import json
 import streamlit as st
 
 from prompts import Prompts
-from report_agent import ReportAgent
 
 from agno.models.ollama import Ollama
 from agno.models.google import Gemini
@@ -11,7 +10,7 @@ from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
 
 prompts = Prompts()
-rep = ReportAgent()
+
 
 class LLM():
     def __init__(self):
@@ -86,11 +85,16 @@ class LLM():
 
     def agent(self):
 
-        instruction = prompts.INSTRUCTIONS
+        # Delay the import here to prevent circular dependency
+        from report_agent import ReportAgent
+        from image_interpreter_agent import ImageInterpreterAgent
+
+        instruction = prompts.get_prompt()
+
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools()],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent()],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
@@ -102,41 +106,3 @@ class LLM():
         )
         return new_agent
 
-    def process_user_message(self, message: str):
-        """Process user messages and generate appropriate responses"""
-        message_lower = message.lower()
-
-        if "interpret" in message_lower or "analysis" in message_lower:
-            return "🔍 I'll analyze the image systematically. Which area should I focus on first?\n\n" + \
-                "• Lung fields and pleural spaces\n" + \
-                "• Cardiac silhouette and vessels\n" + \
-                "• Bones and soft tissues\n" + \
-                "• Overall impression"
-
-        elif "report" in message_lower or "generate" in message_lower:
-            report = rep.generate_structured_report()
-            st.session_state.current_report = report
-            st.session_state.report_generated = True
-            return "📝 I've generated a structured report in the editor. Would you like me to:\n\n" + \
-                "• Explain any specific findings\n" + \
-                "• Modify any sections\n" + \
-                "• Add additional observations"
-
-        elif "sign" in message_lower:
-            st.session_state.report_status = "Final"
-            return "✅ Report status changed to FINAL. Would you like me to generate a signature block?"
-
-        elif "finding" in message_lower:
-            return "⚡ I'll analyze key findings. Select an area to focus on:\n\n" + \
-                "• Pulmonary findings\n" + \
-                "• Cardiovascular status\n" + \
-                "• Skeletal structures\n" + \
-                "• Soft tissue abnormalities"
-
-        else:
-            return "I can help with:\n\n" + \
-                "• Interpreting the X-ray\n" + \
-                "• Generating reports\n" + \
-                "• Identifying findings\n" + \
-                "• Signing reports\n\n" + \
-                "What would you like me to focus on?"
