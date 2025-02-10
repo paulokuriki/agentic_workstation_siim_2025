@@ -12,6 +12,8 @@ rep = ReportAgent()
 prompts = Prompts()
 llm = LLM()
 
+container_height = 780
+
 # ----------------- SESSION STATE -----------------
 if "history" not in st.session_state:
     st.session_state["history"] = []
@@ -45,7 +47,7 @@ col1, col2, col3 = st.columns([1, 1, 1])
 
 # --- WORKLIST & VIEWER ---
 with col1:
-    with st.container(border=True, height=600):
+    with st.container(border=True, height=container_height):
         st.subheader("📋 Patient Worklist")
 
         cols_cases = st.columns(len(cases_df))
@@ -53,8 +55,8 @@ with col1:
             with cols_cases[idx]:
                 if st.button(f'{row["Patient ID"]}', key=f'select_{idx}'):
                     st.session_state.current_case = idx + 1
-                    st.session_state.history.append(
-                        {"role": "assistant", "content": f"📋 Now viewing {row['Patient ID']}. How can I assist you?"})
+                    st.session_state["history"].append(
+                        {"user_message": None, "assistant_message": f"📋 Now viewing {row['Patient ID']}. How can I assist you?", "reasoning": None})
                     st.rerun()
 
         st.divider()
@@ -79,27 +81,37 @@ with col1:
 
 # --- REPORT EDITOR ---
 with col2:
-    with st.container(border=True, height=600):
+    with st.container(border=True, height=container_height):
         st.subheader(f"📝 Report Editor")
 
         if "report_content" not in st.session_state:
             st.session_state.report_content = ""
 
-        report_height = 480
+        container_internal_height = 120
+        report_height = container_height - container_internal_height
         report_text = st.text_area("Report Content:", value=st.session_state.report_content, height=report_height,
                                    key="report_editor")
         st.session_state.report_content = report_text
 
 # --- AI COPILOT ---
 with col3:
-    with st.container(border=True, height=600):
+    with st.container(border=True, height=container_height):
         st.subheader("🤖 AI Copilot")
 
-        with st.container(height=450):
+        container_internal_height = 150
+        with st.container(height=container_height-container_internal_height):
             for interaction in st.session_state["history"]:
-                st.chat_message("user").write(interaction["user_message"])
+                if interaction.get("user_message"):
+                    st.chat_message("user").write(interaction["user_message"])
+
                 if interaction.get("assistant_message"):
-                    st.chat_message("assistant").write(interaction["assistant_message"])
+                    with st.chat_message("assistant"):
+                        st.write(interaction["assistant_message"])
+
+                        if interaction.get("reasoning"):
+                            with st.expander("**Understand agent reasoning...**"):
+                                with st.container(border=True):
+                                    st.code(interaction["reasoning"])
 
             # Show spinner while processing
             if st.session_state.processing:

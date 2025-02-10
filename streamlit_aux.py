@@ -2,6 +2,9 @@ from PIL import Image
 from io import BytesIO
 import requests
 import streamlit as st
+from llm import LLM
+
+llm = LLM()
 
 class Streamlit:
     def __init__(self):
@@ -54,8 +57,3 @@ class Streamlit:
             • ⚡ `findings` - Identify key observations
             • ✅ `sign report` - Finalize report
             """)
-
-        # --- FOOTER ---
-        with st.expander("**Expand this container to understand how the agent is reasoning and calling different tools**"):
-            with st.chat_message("assistant"):
-                st.write("Example of reasoning")
