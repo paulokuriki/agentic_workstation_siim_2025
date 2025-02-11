@@ -17,7 +17,6 @@ prompts = Prompts()
 llm = LLM()
 
 container_height = 780
-image_url = c.SAMPLE_IMAGE
 
 # ----------------- SESSION STATE -----------------
 if "history" not in st.session_state:
@@ -32,8 +31,8 @@ if "history" not in st.session_state:
 if "agent" not in st.session_state:
     st.session_state["agent"] = llm.agent()
 
-if "current_case" not in st.session_state:
-    st.session_state.current_case = None
+if "image_url" not in st.session_state:
+    st.session_state.image_url = c.SAMPLE_CASES[0]
 
 if "report_text" not in st.session_state:
     st.session_state.report_text = ""
@@ -60,9 +59,10 @@ with col1:
         for idx, row in cases_df.iterrows():
             with cols_cases[idx]:
                 if st.button(f'{row["Patient ID"]}', key=f'select_{idx}'):
-                    st.session_state.current_case = idx + 1
+                    st.session_state.image_url = c.SAMPLE_CASES[idx]
                     st.session_state["history"].append(
                         {"user_message": None, "assistant_message": f"📋 Now viewing {row['Patient ID']}. How can I assist you?", "reasoning": None})
+                    st.session_state.report_text = ""
                     st.rerun()
 
         st.divider()
@@ -71,17 +71,16 @@ with col1:
         image_source = st.radio("Select image source:", ["Sample Image", "Upload Image", "Image URL"], horizontal=True)
 
         if image_source == "Sample Image":
-            img = st_aux.load_image_from_url(image_url)
-            st.session_state.current_case_url = image_url
+            img = st_aux.load_image_from_url(st.session_state.image_url)
         elif image_source == "Upload Image":
             uploaded_file = st.file_uploader("Choose an image file", type=['png', 'jpg', 'jpeg'])
             img = st_aux.load_image_from_upload(uploaded_file)
             # TODO. Need to find a way to expose image url. the code below shows a fake image
-            st.session_state.current_case_url = image_url
+            st.session_state.image_url = st.session_state.image_url
         else:
             url = st.text_input("Enter image URL:")
             img = st_aux.load_image_from_url(url) if url else None
-            st.session_state.current_case_url = url
+            st.session_state.image_url = url
 
         if img:
             st.image(img, use_container_width=True)

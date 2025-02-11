@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import streamlit as st
 
 from agno.tools import Toolkit
 
@@ -38,7 +39,7 @@ class ImageInterpreterAgent(Toolkit):
         }
         """
         # TODO fix THIS DEBUG
-        image_url = "https://prod-images-static.radiopaedia.org/images/1371188/0a1f5edc85aa58d5780928cb39b08659c1fc4d6d7c7dce2f8db1d63c7c737234_big_gallery.jpeg"
+        image_url = st.session_state.image_url
 
         payload = {"inputs": image_url}
         response = requests.post(self.api_url, headers=self.headers, json=payload)
