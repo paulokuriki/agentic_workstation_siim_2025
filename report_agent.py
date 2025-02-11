@@ -74,21 +74,15 @@ IMPRESSION:
         """
         # Construct the prompt
         findings = str(findings)
-        print(findings)
-
         prompt = self._construct_prompt(findings)
-        print(prompt)
 
         # Create a proper Message object for the user message
-        messages = [Message(role="user", content=prompt)]  # Use Message class instead of dict
+        messages = [Message(role="user", content=prompt)]
 
         # Get response from model
         response = self.model.response(messages=messages)
-        print(response)
 
         report_text = response.content if response.content else ""
-        print(report_text)
-
         st.session_state.report_text = report_text
 
         # Extract content from response

@@ -1,6 +1,6 @@
 import os
 import json
-import streamlit as st
+
 
 from prompts import Prompts
 
@@ -98,7 +98,7 @@ class LLM():
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
-            tool_call_limit=10,
+            tool_call_limit=3,
             add_history_to_messages=True,
             num_history_responses=5,
             instructions=instruction,

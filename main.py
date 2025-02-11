@@ -36,7 +36,7 @@ if "current_case" not in st.session_state:
     st.session_state.current_case = None
 
 if "report_text" not in st.session_state:
-    st.session_state.report_text = False
+    st.session_state.report_text = ""
 
 if "processing" not in st.session_state:
     st.session_state.processing = False
