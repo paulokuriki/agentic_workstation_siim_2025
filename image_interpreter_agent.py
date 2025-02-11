@@ -45,6 +45,7 @@ class ImageInterpreterAgent(Toolkit):
 
         try:
             response_data = response.json()
+            print(response_data)
 
             response_data = self._transform_response(response_data)
         except json.JSONDecodeError:
@@ -62,11 +63,11 @@ class ImageInterpreterAgent(Toolkit):
         """
 
         label_mapping = {
-            "LABEL_0": "Cardiomegaly",
-            "LABEL_1": "Edema",
-            "LABEL_2": "Consolidation",
-            "LABEL_3": "Pneumonia",
-            "LABEL_4": "No Finding"
+            "LABEL_4": "Cardiomegaly",
+            "LABEL_0": "Edema",
+            "LABEL_1": "Consolidation",
+            "LABEL_2": "Pneumonia",
+            "LABEL_3": "No Finding"
         }
 
         transformed_output = {}
