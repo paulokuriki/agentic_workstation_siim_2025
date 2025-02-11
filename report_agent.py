@@ -1,9 +1,13 @@
+import os
 import json
-from agno.agent import Agent
+
 from agno.tools import Toolkit
 from agno.models.ollama import Ollama
 from agno.models.google import Gemini
-import os
+from agno.models.message import Message
+
+import streamlit as st
+
 
 class ReportAgent(Toolkit):
     """
@@ -16,20 +20,19 @@ class ReportAgent(Toolkit):
         super().__init__(name="report_generator")
 
         self.template = """FINDINGS:
-        • Lung fields are clear and well-expanded
-        • No focal consolidation, effusion, or pneumothorax
-        • No suspicious pulmonary nodules or masses
-        • Heart size is within normal limits
-        • Mediastinal contours appear normal
-        • Aortic arch is unremarkable
-        • Bony thoracic cage shows no acute abnormality
-        • Soft tissues are unremarkable
-        • No suspicious calcifications
+• Lung fields are clear and well-expanded
+• No focal consolidation, effusion, or pneumothorax
+• No suspicious pulmonary nodules or masses
+• Heart size is within normal limits
+• Mediastinal contours appear normal
+• Aortic arch is unremarkable
+• Bony thoracic cage shows no acute abnormality
+• Soft tissues are unremarkable
+• No suspicious calcifications
 
-        IMPRESSION:
-        1. Normal chest radiograph
-        2. No acute cardiopulmonary process
-        """
+IMPRESSION:
+1. Normal chest radiograph
+2. No acute cardiopulmonary process"""
 
         self.instructions = (
             "You are a radiology reporting assistant. Your task is to generate a structured chest radiograph report based on the given probability findings.\n\n"
@@ -58,54 +61,38 @@ class ReportAgent(Toolkit):
         # Register the function for external access
         self.register(self.generate_report)
 
-    def _construct_prompt(self, findings: dict) -> str:
+    def _construct_prompt(self, findings: str) -> str:
         """
         Constructs the prompt dynamically using the findings and template.
-
-        Args:
-            findings (dict): Dictionary containing disease probabilities.
-
-        Returns:
-            str: A formatted prompt string.
         """
-        findings_str = json.dumps(findings, indent=2)
+        findings_str = json.dumps(findings, indent=2) if findings else ""
         return self.instructions.format(findings=findings_str, template=self.template)
 
-    def generate_report(self, findings: dict) -> str:
+    def generate_report(self, findings: str) -> str:
         """
         Generates a radiology report based on disease probability data.
-
-        Args:
-            findings (dict): JSON-like dictionary with probabilities of diseases.
-
-        Returns:
-            str: The generated radiology report.
         """
-        print(123)
+        # Construct the prompt
+        findings = str(findings)
+        print(findings)
 
-        agent = Agent(
-            name="Report Agent",
-            model=self.model,
-            tools=[],
-            show_tool_calls=False,
-            markdown=True,
-            read_tool_call_history=False,
-            tool_call_limit=10,
-            add_history_to_messages=False,
-            instructions=self.instructions,
-            reasoning=False
-        )
-
-        # Construct prompt with given findings
         prompt = self._construct_prompt(findings)
+        print(prompt)
 
-        # Run the agent with the constructed prompt
-        response = agent.run(prompt)
+        # Create a proper Message object for the user message
+        messages = [Message(role="user", content=prompt)]  # Use Message class instead of dict
 
-        # Retrieve and return the final structured report
-        return response.messages[-1].content
-        
+        # Get response from model
+        response = self.model.response(messages=messages)
+        print(response)
 
+        report_text = response.content if response.content else ""
+        print(report_text)
+
+        st.session_state.report_text = report_text
+
+        # Extract content from response
+        return report_text
 
 
 if __name__ == "__main__":

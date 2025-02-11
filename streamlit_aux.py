@@ -52,8 +52,8 @@ class Streamlit:
         with st.container(border=True):
             st.markdown("""
             **Available Commands:**
-            • 🔍 `interpret` - Detailed image analysis
-            • 📝 `generate report` - Create structured report
+            • 🔍 `analyse` - Detailed image analysis
+            • 📝 `report` - Create structured report
             • ⚡ `findings` - Identify key observations
             • ✅ `sign report` - Finalize report
             """)

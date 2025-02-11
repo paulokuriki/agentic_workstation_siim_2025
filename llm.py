@@ -94,7 +94,7 @@ class LLM():
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools(), ImageInterpreterAgent()],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent()],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
@@ -102,7 +102,8 @@ class LLM():
             add_history_to_messages=True,
             num_history_responses=5,
             instructions=instruction,
-            reasoning=True
+            reasoning=True,
+            debug_mode=True
         )
         return new_agent
 

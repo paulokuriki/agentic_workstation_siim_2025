@@ -1,13 +1,16 @@
 import streamlit as st
+from streamlit_aux import Streamlit
+
+# start up streamlit config first
+st_aux = Streamlit()
 
 from llm import LLM
 from prompts import Prompts
 from report_agent import ReportAgent
 from database import Database
-from streamlit_aux import Streamlit
+
 import constants as c
 
-st_aux = Streamlit()
 db = Database()
 rep = ReportAgent()
 prompts = Prompts()
@@ -20,7 +23,7 @@ image_url = c.SAMPLE_IMAGE
 if "history" not in st.session_state:
     st.session_state["history"] = []
     initial_message = ("👋 Hello! I'm your AI Copilot. I can help you with:\n\n"
-                       "1. 🔍 **Interpret** the chest X-ray\n"
+                       "1. 🔍 **Analyze** the chest X-ray\n"
                        "2. 📝 Generate a structured **report**\n"
                        "3. ⚡ Identify key **findings**\n\n"
                        "What would you like me to help you with?")
@@ -32,8 +35,8 @@ if "agent" not in st.session_state:
 if "current_case" not in st.session_state:
     st.session_state.current_case = None
 
-if "report_generated" not in st.session_state:
-    st.session_state.report_generated = False
+if "report_text" not in st.session_state:
+    st.session_state.report_text = False
 
 if "processing" not in st.session_state:
     st.session_state.processing = False
@@ -90,14 +93,14 @@ with col2:
     with st.container(border=True, height=container_height):
         st.subheader(f"📝 Report Editor")
 
-        if "report_content" not in st.session_state:
-            st.session_state.report_content = ""
+        if "report_text" not in st.session_state:
+            st.session_state.report_text = ""
 
         container_internal_height = 120
         report_height = container_height - container_internal_height
-        report_text = st.text_area("Report Content:", value=st.session_state.report_content, height=report_height,
+        report_text = st.text_area("Report Content:", value=st.session_state.report_text, height=report_height,
                                    key="report_editor")
-        st.session_state.report_content = report_text
+        st.session_state.report_text = report_text
 
 # --- AI COPILOT ---
 with col3:
