@@ -11,7 +11,6 @@ class ImageInterpreterAgent(Toolkit):
     """
 
     def __init__(self):
-
         HF_API_URL = "https://ll58hy3yilhy3pe7.us-east-1.aws.endpoints.huggingface.cloud" #kuriki
         HF_API_KEY = os.getenv("HF_API_KEY")
 
@@ -86,6 +85,6 @@ class ImageInterpreterAgent(Toolkit):
 
 if __name__ == "__main__":
     agent = ImageInterpreterAgent()
-
+    st.session_state.image_url = "https://prod-images-static.radiopaedia.org/images/27429050/0de8e5d6d8882005d17407a8283591_big_gallery.jpeg"
     response = agent.interpret_xray()
     print(response)

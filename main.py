@@ -40,8 +40,10 @@ if "report_text" not in st.session_state:
 if "processing" not in st.session_state:
     st.session_state.processing = False
 
-# ----------------- HELPER FUNCTIONS -----------------
-cases_df = db.generate_samples(3)
+if "cases_df" not in st.session_state:
+    st.session_state.cases_df = db.generate_samples(3)
+    print(db.generate_samples(3))
+
 
 # --- HEADER ---
 st.title("🏥 AI-Powered Radiology Workstation")
@@ -54,9 +56,10 @@ with col1:
     with st.container(border=True, height=container_height):
         st.subheader("📋 Patient Worklist")
 
-        cols_cases = st.columns(len(cases_df))
+        print(st.session_state.cases_df)
+        cols_cases = st.columns(len(st.session_state.cases_df))
         sample_case_url = "https://upload.wikimedia.org/wikipedia/commons/a/a1/Normal_posteroanterior_%28PA%29_chest_radiograph_%28X-ray%29.jpg"
-        for idx, row in cases_df.iterrows():
+        for idx, row in st.session_state.cases_df.iterrows():
             with cols_cases[idx]:
                 if st.button(f'{row["Patient ID"]}', key=f'select_{idx}'):
                     st.session_state.image_url = c.SAMPLE_CASES[idx]

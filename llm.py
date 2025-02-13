@@ -8,6 +8,7 @@ from agno.models.ollama import Ollama
 from agno.models.google import Gemini
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
+from call_functions import open_new_case
 
 prompts = Prompts()
 
@@ -94,7 +95,7 @@ class LLM():
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent()],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), open_new_case],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
