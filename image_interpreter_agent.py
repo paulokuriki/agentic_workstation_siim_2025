@@ -37,30 +37,48 @@ class ImageInterpreterAgent(Toolkit):
             "fracture": 0.024887
         }
         """
-        # TODO fix THIS DEBUG
         image_url = st.session_state.image_url
 
         payload = {"inputs": image_url}
-        response = requests.post(self.api_url, headers=self.headers, json=payload)
-
+        
         try:
+            response = requests.post(self.api_url, headers=self.headers, json=payload)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            
             response_data = response.json()
-            print(response_data)
-
-            response_data = self._transform_response(response_data)
-        except json.JSONDecodeError:
-            return f"Invalid response from server: {response.text}"
-
-        return json.dumps(response_data, indent=2)
+            print("API Response:", response_data)  # Debug print
+            
+            # Check if response_data is a string (error message)
+            if isinstance(response_data, str):
+                return json.dumps({"error": response_data})
+                
+            # Check if response_data is a dict with 'error' key
+            if isinstance(response_data, dict) and 'error' in response_data:
+                return json.dumps(response_data)
+                
+            transformed_data = self._transform_response(response_data)
+            return json.dumps(transformed_data, indent=2)
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"API request failed: {str(e)}"
+            print(error_msg)  # Debug print
+            return json.dumps({"error": error_msg})
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON response: {str(e)}"
+            print(error_msg)  # Debug print
+            return json.dumps({"error": error_msg})
+        except Exception as e:
+            error_msg = f"Unexpected error: {str(e)}"
+            print(error_msg)  # Debug print
+            return json.dumps({"error": error_msg})
 
     @staticmethod
     def _transform_response(api_response):
         """
         Transforms the API response to the desired format using a mapping dictionary.
-
-        :param api_response: List of dictionaries containing 'label' and 'score'.
-        :return: Dictionary with transformed labels and scores.
         """
+        # Debug print to see the structure of api_response
+        print("Transform input:", api_response)
 
         label_mapping = {
             "LABEL_4": "Cardiomegaly",
@@ -72,13 +90,24 @@ class ImageInterpreterAgent(Toolkit):
 
         transformed_output = {}
 
+        # Handle different response formats
+        if isinstance(api_response, list):
+            for item in api_response:
+                if isinstance(item, dict):
+                    label = item.get("label")
+                    score = item.get("score", 0.0)
 
-        for item in api_response:
-            label = item.get("label")
-            score = item.get("score")
+                    if label in label_mapping:
+                        transformed_output[label_mapping[label]] = score
+        elif isinstance(api_response, dict):
+            # Handle direct dictionary response
+            for label, score in api_response.items():
+                if label in label_mapping:
+                    transformed_output[label_mapping[label]] = score
 
-            if label in label_mapping:
-                transformed_output[label_mapping[label]] = score
+        # If no valid data was processed, return an error message
+        if not transformed_output:
+            transformed_output = {"error": "No valid findings in response"}
 
         return transformed_output
 
