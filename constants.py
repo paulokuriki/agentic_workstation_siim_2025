@@ -7,3 +7,8 @@ SAMPLE_CASES = [
 # MODEL CONFIG
 LLM_MODEL_WORKFLOW_AGENT = "gemini-2.0-flash"
 LLM_MODEL_REPORT_AGENT = "gemini-2.0-flash"
+
+
+# List of LLMs to test
+# gemini-2.0-flash                    Input $0.10   Output $0.40
+# gemini-2.0-flash-lite-preview-02-05 Input $0.075  Output $0.30

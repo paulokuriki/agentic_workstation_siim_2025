@@ -3,7 +3,6 @@ import json
 
 from prompts import Prompts
 
-from agno.models.ollama import Ollama
 from agno.models.google import Gemini
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
@@ -84,7 +83,7 @@ class LLM():
             read_tool_call_history=True,
             tool_call_limit=3,
             add_history_to_messages=True,
-            num_history_responses=5,
+            num_history_responses=3,
             description="",
             instructions=instruction,
             reasoning=False,
