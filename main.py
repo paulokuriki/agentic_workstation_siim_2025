@@ -1,8 +1,10 @@
 import streamlit as st
 from streamlit_aux import Streamlit
+from whisper import StreamlitWhisperApp
 
 # start up streamlit config first
 st_aux = Streamlit()
+whisper = StreamlitWhisperApp()
 
 from llm import LLM
 from prompts import Prompts
@@ -103,7 +105,7 @@ with col3:
     with st.container(border=True, height=container_height):
         st.subheader("🤖 AI Copilot")
 
-        container_internal_height = 150
+        container_internal_height = 265
         with st.container(height=container_height-container_internal_height):
             for interaction in st.session_state["history"]:
                 if interaction.get("user_message"):
@@ -143,5 +145,7 @@ with col3:
             })
             st.session_state.processing = True
             st.rerun()
+
+        whisper.show_audio_input()
 
 st_aux.show_footer()
