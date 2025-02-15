@@ -1,39 +1,22 @@
 import os
 import json
 
-
 from prompts import Prompts
 
 from agno.models.ollama import Ollama
 from agno.models.google import Gemini
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
-from call_functions import open_new_case
+from call_functions import load_case
+
+from constants import LLM_MODEL_WORKFLOW_AGENT
 
 prompts = Prompts()
 
 
 class LLM():
     def __init__(self):
-        self.selected_model = "gemini"
-
-        self.ollama_model = "llama3.3:70b"
-        gemini_api_key = os.environ.get("GEMINI_API_KEY")
-
-
-        if self.selected_model == "gemini":
-            self.model = Gemini(
-                api_key=gemini_api_key,
-                id="gemini-2.0-flash-exp"
-            )
-        elif self.selected_model == "ollama":
-            self.model = Ollama(id=self.ollama_model,
-                           host="http://wskuriki-rad.dhcp.swmed.org:11434",
-                           keep_alive=-1,
-                           # client_params={"num_ctx": 8192}
-                           )
-
-
+        self.model = Gemini(api_key=os.environ.get("GEMINI_API_KEY"), id=LLM_MODEL_WORKFLOW_AGENT)
 
     def get_reasoning_messages(self, response):
         """
@@ -95,16 +78,16 @@ class LLM():
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), open_new_case],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), load_case],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
             tool_call_limit=3,
             add_history_to_messages=True,
             num_history_responses=5,
+            description="",
             instructions=instruction,
-            reasoning=True,
+            reasoning=False,
             debug_mode=True
         )
         return new_agent
-

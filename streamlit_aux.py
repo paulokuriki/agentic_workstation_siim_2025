@@ -6,6 +6,7 @@ from llm import LLM
 
 llm = LLM()
 
+
 class Streamlit:
     def __init__(self):
         # ----------------- STREAMLIT UI -----------------
@@ -16,26 +17,16 @@ class Streamlit:
         )
 
         # Custom CSS for better styling
-        st.markdown("""
-            <style>
-            .stTabs [data-baseweb="tab-list"] button [data-testid="stMarkdownContainer"] p {
-                font-size: 1.2rem;
-            }
-            .reportSection {
-                background-color: #f0f2f6;
-                padding: 10px;
-                border-radius: 5px;
-                margin: 5px 0;
-            }
-            </style>
-        """, unsafe_allow_html=True)
 
     # ----------------- IMAGE HANDLING -----------------
     def load_image_from_url(self, url):
-        try:
-            response = requests.get(url)
-            return Image.open(BytesIO(response.content))
-        except:
+        if url:
+            try:
+                response = requests.get(url)
+                return Image.open(BytesIO(response.content))
+            except:
+                return None
+        else:
             return None
 
     def load_image_from_upload(self, uploaded_file):
@@ -49,11 +40,27 @@ class Streamlit:
     # --- FOOTER ---
     @staticmethod
     def show_footer():
+        buttons = {
+            "🔍 **`analyse`**": "Analyze image",
+            "📝 **`generate report`**": "Generate report",
+            "📝 **`make changes in report`**": "Make changes in report",
+            "⚡ **`identify findings in report`**": "Identify findings in report",
+            "✅ **`sign report`**": "Sign report",
+        }
+
+        def run_button_command(command_message):
+            st.session_state["history"].append(
+                {"user_message": command_message, "assistant_message": None, "reasoning": None}
+            )
+            st.session_state.processing = True
+            st.rerun()
+
         with st.container(border=True):
-            st.markdown("""
-            **Available Commands:**
-            • 🔍 `analyse` - Detailed image analysis
-            • 📝 `report` - Create structured report
-            • ⚡ `findings` - Identify key observations
-            • ✅ `sign report` - Finalize report
-            """)
+            st.write("""### Available Commands:""")
+            columns = st.columns(len(buttons))
+
+            for col, (button_text, command_message) in zip(columns, buttons.items()):
+                with col:
+                    if st.button(button_text):
+                        run_button_command(command_message)
+

@@ -2,12 +2,15 @@ import os
 import json
 
 from agno.tools import Toolkit
-from agno.models.ollama import Ollama
 from agno.models.google import Gemini
 from agno.models.message import Message
 
 import streamlit as st
+from prompts import Prompts
 
+from constants import LLM_MODEL_REPORT_AGENT
+
+prompts = Prompts()
 
 class ReportAgent(Toolkit):
     """
@@ -19,54 +22,35 @@ class ReportAgent(Toolkit):
         """Initialize the ReportAgent."""
         super().__init__(name="report_generator")
 
-        self.template = """FINDINGS:
-• Lung fields are clear and well-expanded
-• No focal consolidation, effusion, or pneumothorax
-• No suspicious pulmonary nodules or masses
-• Heart size is within normal limits
-• Mediastinal contours appear normal
-• Aortic arch is unremarkable
-• Bony thoracic cage shows no acute abnormality
-• Soft tissues are unremarkable
-• No suspicious calcifications
-
-IMPRESSION:
-1. Normal chest radiograph
-2. No acute cardiopulmonary process"""
-
-        self.instructions = (
-            "You are a radiology reporting assistant. Your task is to generate a structured chest radiograph report based on the given probability findings.\n\n"
-            "Only return the structured report, and do not include any explanations or extra text. Keep the format exactly as shown in the template below.\n\n"
-            "Use 0.5 as a cutoff for positive findings. If a probability is < 0.5, assume the finding is absent.\n\n"
-            "### FINDINGS:\n{findings}\n\n"
-            "### TEMPLATE:\n{template}"
-        )
-
-        self.selected_model = "gemini"
-
-        self.ollama_model = "llama3.3:70b"
-        gemini_api_key = os.environ.get("GEMINI_API_KEY")
-
-        if self.selected_model == "gemini":
-            self.model = Gemini(
-                api_key=gemini_api_key,
-                id="gemini-2.0-flash-exp"
-            )
-        elif self.selected_model == "ollama":
-            self.model = Ollama(id=self.ollama_model,
-                                host="http://wskuriki-rad.dhcp.swmed.org:11434",
-                                keep_alive=-1
-                                )
+        self.model = Gemini(api_key=os.environ.get("GEMINI_API_KEY"), id=LLM_MODEL_REPORT_AGENT)
 
         # Register the function for external access
         self.register(self.generate_report)
+        self.register(self.update_report)
 
-    def _construct_prompt(self, findings: str) -> str:
+    def _generate_report_prompt(self, findings: str) -> str:
         """
-        Constructs the prompt dynamically using the findings and template.
+        Generates a prompt to update the normal template with the findings.
         """
         findings_str = json.dumps(findings, indent=2) if findings else ""
-        return self.instructions.format(findings=findings_str, template=self.template)
+
+        instructions = prompts.get_instructions_generate_report()
+        template = prompts.get_report_template()
+
+        instructions_complete = instructions.format(findings=findings_str, template=template)
+
+        return instructions_complete
+
+    def _update_report_prompt(self, changes: str) -> str:
+        """
+        Generates a prompt to update the already existing report with the changes requested by the user.
+        """
+        instructions = prompts.get_instructions_update_report()
+        report = st.session_state.report_text
+
+        instructions_complete = instructions.format(changes=changes, report=report)
+
+        return instructions_complete
 
     def generate_report(self, findings: str) -> str:
         """
@@ -74,7 +58,27 @@ IMPRESSION:
         """
         # Construct the prompt
         findings = str(findings)
-        prompt = self._construct_prompt(findings)
+        prompt = self._generate_report_prompt(findings)
+
+        # Create a proper Message object for the user message
+        messages = [Message(role="user", content=prompt)]
+
+        # Get response from model
+        response = self.model.response(messages=messages)
+
+        report_text = response.content if response.content else ""
+        st.session_state.report_text = report_text
+
+        # Extract content from response
+        return report_text
+
+    def update_report(self, requested_changes: str) -> str:
+        """
+        Updates the current report with the changes requested by the user.
+        """
+        # Construct the prompt
+        requested_changes = str(requested_changes)
+        prompt = self._update_report_prompt(requested_changes)
 
         # Create a proper Message object for the user message
         messages = [Message(role="user", content=prompt)]

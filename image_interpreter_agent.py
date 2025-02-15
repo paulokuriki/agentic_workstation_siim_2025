@@ -5,6 +5,10 @@ import streamlit as st
 
 from agno.tools import Toolkit
 
+import time
+
+
+
 class ImageInterpreterAgent(Toolkit):
     """
     ImageInterpreterAgent is a toolkit for analyzing medical images using an API.
@@ -37,12 +41,36 @@ class ImageInterpreterAgent(Toolkit):
             "fracture": 0.024887
         }
         """
-        image_url = st.session_state.image_url
+        try:
+            image_url = st.session_state.image_url
+        except AttributeError as e:
+            # I'm running as a standalone python for testing
+            image_url = "https://prod-images-static.radiopaedia.org/images/27429050/0de8e5d6d8882005d17407a8283591_big_gallery.jpeg"
 
         payload = {"inputs": image_url}
         
         try:
-            response = requests.post(self.api_url, headers=self.headers, json=payload)
+            try_count = 1
+            max_retries = 12  # Maximum number of retry attempts. In total, it will wait up to 1 min
+            sleep_time = 5  # Seconds to wait before retrying
+
+            # Attempt to send inference request with retry logic
+            while try_count <= max_retries:
+                response = requests.post(self.api_url, headers=self.headers, json=payload)
+
+                if response.status_code == 503:
+                    # Status code 503 indicates the Hugging Face endpoint might be inactive (cold start)
+                    if try_count < max_retries:
+                        time.sleep(sleep_time)  # Wait before retrying
+                        try_count += 1  # Increment retry count
+                        continue  # Retry request
+                    else:
+                        # Stop retrying if max attempts have been reached
+                        break
+                else:
+                    # If response is not 503, exit the loop as no retry is needed
+                    break
+
             response.raise_for_status()  # Raise an exception for bad status codes
             
             response_data = response.json()
@@ -114,6 +142,5 @@ class ImageInterpreterAgent(Toolkit):
 
 if __name__ == "__main__":
     agent = ImageInterpreterAgent()
-    st.session_state.image_url = "https://prod-images-static.radiopaedia.org/images/27429050/0de8e5d6d8882005d17407a8283591_big_gallery.jpeg"
     response = agent.interpret_xray()
     print(response)
