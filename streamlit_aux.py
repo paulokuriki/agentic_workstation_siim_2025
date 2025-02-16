@@ -52,8 +52,7 @@ class Streamlit:
 
         def run_button_command(command):
             st.session_state["history"].append(
-                {"user_message": command, "assistant_message": None, "reasoning": None}
-            )
+                {"user_message": command, "assistant_message": None, "reasoning": None})
             st.session_state.processing = True
             st.rerun()
 
@@ -65,4 +64,3 @@ class Streamlit:
                 with col:
                     if st.button(button_text):
                         run_button_command(command_message)
-

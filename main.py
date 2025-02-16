@@ -108,7 +108,7 @@ with col3:
         st.subheader("🤖 AI Copilot")
 
         container_internal_height = 235
-        with st.container(height=container_height-container_internal_height):
+        with st.container(height=container_height - container_internal_height):
             for interaction in st.session_state["history"]:
                 if interaction.get("user_message"):
                     st.chat_message("user").write(interaction["user_message"])
@@ -130,32 +130,38 @@ with col3:
                         current_try = 0
                         while current_try < max_try:
                             try:
-                                response = st.session_state["agent"].run(st.session_state["history"][-1]["user_message"])
+                                response = st.session_state["agent"].run(
+                                    st.session_state["history"][-1]["user_message"])
                                 assistant_message = llm.get_last_response(response)
                                 reasoning = llm.get_reasoning_messages(response)
+
+                                st.session_state["history"][-1]["assistant_message"] = assistant_message
+                                st.session_state["history"][-1]["reasoning"] = reasoning
+                                st.session_state.processing = False
                                 break
                             except Exception as e:
-                                # failed to call agent. Wait 2 seconds and retry
                                 time.sleep(2)
                                 current_try = current_try + 1
                                 assistant_message = e
                                 reasoning = None
+                                if current_try == max_try:
+                                    st.session_state["history"][-1]["assistant_message"] = assistant_message
+                                    st.session_state["history"][-1]["reasoning"] = reasoning
+                                    st.session_state.processing = False
                                 continue
 
-                        st.session_state["history"][-1]["assistant_message"] = assistant_message
-                        st.session_state["history"][-1]["reasoning"] = reasoning
-                        st.session_state.processing = False
                         st.rerun()
 
-        if prompt := st.chat_input("💬 Ask me about the X-ray..."):
-            st.session_state["history"].append({
-                "user_message": prompt,
-                "assistant_message": None,
-                "reasoning": None
-            })
-            st.session_state.processing = True
-            st.rerun()
+        if not st.session_state.processing:
+            if prompt := st.chat_input("💬 Ask me about the X-ray..."):
+                st.session_state["history"].append({
+                    "user_message": prompt,
+                    "assistant_message": None,
+                    "reasoning": None
+                })
+                st.session_state.processing = True
+                st.rerun()
 
-        whisper.show_audio_input()
+            whisper.show_audio_input()
 
 st_aux.show_footer()
