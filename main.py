@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 from streamlit_aux import Streamlit
 from whisper import StreamlitWhisperApp
@@ -82,7 +84,7 @@ with col1:
             st.session_state.image_url = url
 
         if img:
-            st.image(img, use_container_width=True)
+            st.image(img, use_container_width=True, )
         else:
             st.info("Please select from the worklist or upload an image")
 
@@ -94,10 +96,10 @@ with col2:
         if "report_text" not in st.session_state:
             st.session_state.report_text = ""
 
-        container_internal_height = 120
+        container_internal_height = 95
         report_height = container_height - container_internal_height
         report_text = st.text_area("Report", value=st.session_state.report_text, height=report_height,
-                                   key="report_editor", label_visibility="hidden")
+                                   key="report_editor", label_visibility="collapsed")
         st.session_state.report_text = report_text
 
 # --- AI COPILOT ---
@@ -105,7 +107,7 @@ with col3:
     with st.container(border=True, height=container_height):
         st.subheader("🤖 AI Copilot")
 
-        container_internal_height = 265
+        container_internal_height = 235
         with st.container(height=container_height-container_internal_height):
             for interaction in st.session_state["history"]:
                 if interaction.get("user_message"):
@@ -124,13 +126,21 @@ with col3:
             if st.session_state.processing:
                 with st.chat_message("assistant"):
                     with st.spinner("Thinking..."):
-                        try:
-                            response = st.session_state["agent"].run(st.session_state["history"][-1]["user_message"])
-                            assistant_message = llm.get_last_response(response)
-                            reasoning = llm.get_reasoning_messages(response)
-                        except Exception as e:
-                            assistant_message = e
-                            reasoning = None
+                        max_try = 3
+                        current_try = 0
+                        while current_try < max_try:
+                            try:
+                                response = st.session_state["agent"].run(st.session_state["history"][-1]["user_message"])
+                                assistant_message = llm.get_last_response(response)
+                                reasoning = llm.get_reasoning_messages(response)
+                                break
+                            except Exception as e:
+                                # failed to call agent. Wait 2 seconds and retry
+                                time.sleep(2)
+                                current_try = current_try + 1
+                                assistant_message = e
+                                reasoning = None
+                                continue
 
                         st.session_state["history"][-1]["assistant_message"] = assistant_message
                         st.session_state["history"][-1]["reasoning"] = reasoning

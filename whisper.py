@@ -45,7 +45,7 @@ class StreamlitWhisperApp:
         return file_path
 
     def show_audio_input(self):
-        audio_file = st.audio_input("Talk to the Co-Pilot:", label_visibility="hidden")
+        audio_file = st.audio_input("Talk to the Co-Pilot:", label_visibility="collapsed")
 
         def run_button_command(command_message):
             st.session_state["history"].append(
@@ -55,22 +55,21 @@ class StreamlitWhisperApp:
             st.rerun()
 
         if audio_file:
-            with st.spinner("Thinking..."):
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
-                    temp_file.write(audio_file.read())
-                    temp_file_path = temp_file.name
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+                temp_file.write(audio_file.read())
+                temp_file_path = temp_file.name
 
-                self.crop_audio(temp_file_path)
+            self.crop_audio(temp_file_path)
 
-                audio_duration = self.get_audio_duration(temp_file_path)
-                print(f"Processed Audio Duration: {audio_duration:.2f} seconds")
+            audio_duration = self.get_audio_duration(temp_file_path)
+            print(f"Processed Audio Duration: {audio_duration:.2f} seconds")
 
-                with open(temp_file_path, "rb") as audio:
-                    transcription = self.transcriber.transcribe_audio(audio)
-                    run_button_command(transcription)
-                    print(transcription)
+            with open(temp_file_path, "rb") as audio:
+                transcription = self.transcriber.transcribe_audio(audio)
+                run_button_command(transcription)
+                print(transcription)
 
-                os.remove(temp_file_path)
+            os.remove(temp_file_path)
 
 
 if __name__ == "__main__":
