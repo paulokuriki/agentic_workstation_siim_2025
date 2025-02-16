@@ -61,7 +61,7 @@ class ImageInterpreterAgent(Toolkit):
 
                 if response.status_code == 503:
                     if send_notification:
-                        st.warning('Starting up agent. Please wait...', icon="⏳")
+                        st.warning('Starting up HuggingFace agent. Please wait...', icon="⏳")
                         send_notification = False
                     # Status code 503 indicates the Hugging Face endpoint might be inactive (cold start)
                     if try_count < max_retries:
