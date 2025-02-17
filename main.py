@@ -45,7 +45,7 @@ if "cases_df" not in st.session_state:
     st.session_state.cases_df = db.generate_samples()
 
 if "image_url" not in st.session_state:
-    st.session_state.image_url = st.session_state.cases_df.iloc[0].url
+    st.session_state.image_url = None
 
 
 # --- HEADER ---
@@ -75,8 +75,6 @@ with col1:
         image_source = st.radio("Select image source:", ["Sample Image", "Image URL"], horizontal=True)
 
         if image_source == "Sample Image":
-            if st.session_state.image_url is None:
-                st.session_state.image_url = st.session_state.cases_df.iloc[0].url
             img = st_aux.load_image_from_url(st.session_state.image_url)
         else:
             url = st.text_input("Enter image URL:")
@@ -86,7 +84,7 @@ with col1:
         if img:
             st.image(img, use_container_width=True, )
         else:
-            st.info("Please select from the worklist or upload an image")
+            st.warning("🔍 No image selected yet! Choose a case from the worklist or enter an image URL to begin viewing.")
 
 # --- REPORT EDITOR ---
 with col2:
