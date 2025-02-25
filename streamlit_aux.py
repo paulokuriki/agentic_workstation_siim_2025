@@ -41,17 +41,18 @@ class Streamlit:
     @staticmethod
     def show_footer():
         buttons = {
-            "🔍 **`analyse`**": "Analyze image",
+            "📁 **`list cases`**": "List all available cases",
+            "📂 **`load case #`**": "Load a case number",
+            "🔍 **`analyse image`**": "Analyze image",
             "📝 **`generate report`**": "Generate report",
-            "📝 **`make changes in report`**": "Make changes in report",
-            "⚡ **`identify findings in report`**": "Identify findings in report",
+            "📝 **`make changes to report`**": "Make changes to report",
+            "⚡ **`identify findings in report`**": "Identify significant findings in report",
             "✅ **`sign report`**": "Sign report",
         }
 
-        def run_button_command(command_message):
+        def run_button_command(command):
             st.session_state["history"].append(
-                {"user_message": command_message, "assistant_message": None, "reasoning": None}
-            )
+                {"user_message": command, "assistant_message": None, "reasoning": None})
             st.session_state.processing = True
             st.rerun()
 
@@ -63,4 +64,3 @@ class Streamlit:
                 with col:
                     if st.button(button_text):
                         run_button_command(command_message)
-

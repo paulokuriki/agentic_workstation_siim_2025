@@ -53,12 +53,16 @@ class ImageInterpreterAgent(Toolkit):
             try_count = 1
             max_retries = 12  # Maximum number of retry attempts. In total, it will wait up to 1 min
             sleep_time = 5  # Seconds to wait before retrying
+            send_notification = True
 
             # Attempt to send inference request with retry logic
             while try_count <= max_retries:
                 response = requests.post(self.api_url, headers=self.headers, json=payload)
 
                 if response.status_code == 503:
+                    if send_notification:
+                        st.warning('Starting up HuggingFace agent. Please wait...', icon="⏳")
+                        send_notification = False
                     # Status code 503 indicates the Hugging Face endpoint might be inactive (cold start)
                     if try_count < max_retries:
                         time.sleep(sleep_time)  # Wait before retrying
@@ -87,6 +91,10 @@ class ImageInterpreterAgent(Toolkit):
             transformed_data = self._transform_response(response_data)
             return json.dumps(transformed_data, indent=2)
             
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"It was not possible to connect to the interpretation API. Please contact the support team: {str(e)}"
+            print(error_msg)  # Debug print
+            return json.dumps({"error": error_msg})
         except requests.exceptions.RequestException as e:
             error_msg = f"API request failed: {str(e)}"
             print(error_msg)  # Debug print

@@ -24,3 +24,13 @@ def load_case(case_number: int) -> str:
             return json.dumps(True)
 
     return json.dumps(False)
+
+def list_available_cases() -> str:
+    """
+    This function extracts all the case IDs and returns them as a list.
+
+    :return: A JSON string of a list of integers representing available case IDs.
+    """
+
+    cases_id = json.dumps(st.session_state.cases_df.id.to_list())
+    return cases_id

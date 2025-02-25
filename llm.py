@@ -6,7 +6,7 @@ from prompts import Prompts
 from agno.models.google import Gemini
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
-from call_functions import load_case
+from call_functions import load_case, list_available_cases
 
 from constants import LLM_MODEL_WORKFLOW_AGENT
 
@@ -63,21 +63,34 @@ class LLM():
         return "\n".join(formatted_output)
 
     def get_last_response(self, response):
-        msg = response.messages[-1].content
-        return msg
+        # Handle different response types
+        if hasattr(response, 'messages') and response.messages:
+            last_message = response.messages[-1]
+            if hasattr(last_message, 'content'):
+                # Try to parse JSON if it's a string that looks like JSON
+                try:
+                    if isinstance(last_message.content, str) and last_message.content.strip().startswith('['):
+                        parsed_content = json.loads(last_message.content)
+                        return json.dumps(parsed_content, indent=2)
+                except:
+                    pass
+                return last_message.content
+        return str(response)
+
 
     def agent(self):
 
         # Delay the import here to prevent circular dependency
         from report_agent import ReportAgent
         from image_interpreter_agent import ImageInterpreterAgent
+        from actionable_findings_agent import ActionableFindings
 
         instruction = prompts.get_prompt()
 
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), load_case],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), ActionableFindings(), load_case, list_available_cases],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,

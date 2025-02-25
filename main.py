@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 from streamlit_aux import Streamlit
 from whisper import StreamlitWhisperApp
@@ -43,8 +45,10 @@ if "cases_df" not in st.session_state:
     st.session_state.cases_df = db.generate_samples()
 
 if "image_url" not in st.session_state:
-    st.session_state.image_url = st.session_state.cases_df.iloc[0].url
+    st.session_state.image_url = None
 
+if "notification_email" not in st.session_state:
+    st.session_state.notification_email = "eduardofarina61@gmail.com"  # default email
 
 # --- HEADER ---
 st.title("🏥 AI-Powered Radiology Workstation")
@@ -73,8 +77,6 @@ with col1:
         image_source = st.radio("Select image source:", ["Sample Image", "Image URL"], horizontal=True)
 
         if image_source == "Sample Image":
-            if st.session_state.image_url is None:
-                st.session_state.image_url = st.session_state.cases_df.iloc[0].url
             img = st_aux.load_image_from_url(st.session_state.image_url)
         else:
             url = st.text_input("Enter image URL:")
@@ -82,9 +84,9 @@ with col1:
             st.session_state.image_url = url
 
         if img:
-            st.image(img, use_container_width=True)
+            st.image(img, use_container_width=True, )
         else:
-            st.info("Please select from the worklist or upload an image")
+            st.warning("🔍 No image selected yet! Choose a case from the worklist or enter an image URL to begin viewing.")
 
 # --- REPORT EDITOR ---
 with col2:
@@ -94,19 +96,28 @@ with col2:
         if "report_text" not in st.session_state:
             st.session_state.report_text = ""
 
-        container_internal_height = 120
+        container_internal_height = 95
         report_height = container_height - container_internal_height
         report_text = st.text_area("Report", value=st.session_state.report_text, height=report_height,
-                                   key="report_editor", label_visibility="hidden")
+                                   key="report_editor", label_visibility="collapsed")
         st.session_state.report_text = report_text
 
 # --- AI COPILOT ---
 with col3:
     with st.container(border=True, height=container_height):
         st.subheader("🤖 AI Copilot")
+        
+        # Add email configuration expander
+        with st.expander("⚙️ Notification Settings"):
+            st.session_state.notification_email = st.text_input(
+                "Email for notifications:",
+                value=st.session_state.notification_email,
+                placeholder="Enter email address",
+                help="Enter the email address where you want to receive critical findings notifications"
+            )
 
-        container_internal_height = 265
-        with st.container(height=container_height-container_internal_height):
+        container_internal_height = 235
+        with st.container(height=container_height - container_internal_height):
             for interaction in st.session_state["history"]:
                 if interaction.get("user_message"):
                     st.chat_message("user").write(interaction["user_message"])
@@ -124,28 +135,42 @@ with col3:
             if st.session_state.processing:
                 with st.chat_message("assistant"):
                     with st.spinner("Thinking..."):
-                        try:
-                            response = st.session_state["agent"].run(st.session_state["history"][-1]["user_message"])
-                            assistant_message = llm.get_last_response(response)
-                            reasoning = llm.get_reasoning_messages(response)
-                        except Exception as e:
-                            assistant_message = e
-                            reasoning = None
+                        max_try = 3
+                        current_try = 0
+                        while current_try < max_try:
+                            try:
+                                response = st.session_state["agent"].run(
+                                    st.session_state["history"][-1]["user_message"])
+                                assistant_message = llm.get_last_response(response)
+                                reasoning = llm.get_reasoning_messages(response)
 
-                        st.session_state["history"][-1]["assistant_message"] = assistant_message
-                        st.session_state["history"][-1]["reasoning"] = reasoning
-                        st.session_state.processing = False
+                                st.session_state["history"][-1]["assistant_message"] = assistant_message
+                                st.session_state["history"][-1]["reasoning"] = reasoning
+                                st.session_state.processing = False
+                                break
+                            except Exception as e:
+                                time.sleep(2)
+                                current_try = current_try + 1
+                                assistant_message = e
+                                reasoning = None
+                                if current_try == max_try:
+                                    st.session_state["history"][-1]["assistant_message"] = assistant_message
+                                    st.session_state["history"][-1]["reasoning"] = reasoning
+                                    st.session_state.processing = False
+                                continue
+
                         st.rerun()
 
-        if prompt := st.chat_input("💬 Ask me about the X-ray..."):
-            st.session_state["history"].append({
-                "user_message": prompt,
-                "assistant_message": None,
-                "reasoning": None
-            })
-            st.session_state.processing = True
-            st.rerun()
+        if not st.session_state.processing:
+            if prompt := st.chat_input("💬 Ask me about the X-ray..."):
+                st.session_state["history"].append({
+                    "user_message": prompt,
+                    "assistant_message": None,
+                    "reasoning": None
+                })
+                st.session_state.processing = True
+                st.rerun()
 
-        whisper.show_audio_input()
+            whisper.show_audio_input()
 
 st_aux.show_footer()

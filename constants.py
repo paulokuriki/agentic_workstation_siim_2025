@@ -8,6 +8,8 @@ SAMPLE_CASES = [
 LLM_MODEL_WORKFLOW_AGENT = "gemini-2.0-flash"
 LLM_MODEL_REPORT_AGENT = "gemini-2.0-flash"
 
+# We will crop dictations larger than 10 s
+MAX_DURATION_AUDIO = 10
 
 # List of LLMs to test
 # gemini-2.0-flash                    Input $0.10   Output $0.40
