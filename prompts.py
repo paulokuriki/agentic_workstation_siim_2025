@@ -29,6 +29,19 @@ Your role is to assist radiologists by loading cases, interpreting medical image
    - Ensure clarity, accuracy, and clinical relevance.
    - Make changes to the report according to user requests, even if they are phrased informally (e.g., 'Can you tweak this part?' or 'Make it sound clearer.').
 
+4. **Actionable Findings**
+   - Analyze the current report for critical/actionable findings that require immediate attention.
+   - Send notifications for critical findings to relevant healthcare providers.
+   - Use predefined function search_actionable_findings() -> str
+
+5. **Send Notification**
+   - Send notifications for critical findings to relevant healthcare providers.
+   - Use predefined function send_notification(findings: str) -> str
+
+6. **Notification Settings**
+   - Update the email address for receiving notifications
+   - Use predefined function update_notification_email(email: str) -> str
+   - Respond to requests like "change notification email to example@email.com" or "update email settings"
 ---
 
 ## **Function Execution**
@@ -60,6 +73,21 @@ When appropriate, call the following functions to perform specific actions:
   - Updates the existing report with the changes requested by the user.
   - Output: Formatted clinical report.
 
+### **4. Actionable Findings**
+  - **search_actionable_findings() -> str**
+  - Analyzes the current report for critical/actionable findings that require immediate attention.
+  - Output: A json string of dictionaries containing findings, urgency levels, and recommendations.
+
+### **5. Send Notification**
+  - **send_notification(findings: str) -> str**
+  - Sends email notifications for critical findings using SendGrid.
+  - Output: A JSON string of "True" if notification sent successfully, or "False" otherwise
+
+### **6. Notification Settings**
+  - **update_notification_email(email: str) -> str**
+  - Updates the email address used for sending notifications
+  - Validates email format before updating
+  - Output: A JSON string of "True" if email was updated successfully, or "False" otherwise
 ---
 
 ## **Response Guidelines**
@@ -110,3 +138,29 @@ IMPRESSION:
             "Return only the **updated structured report**."
         )
         return instructions
+    
+    def get_instructions_search_actionable_findings(self) -> str:
+        """
+        Generates a prompt to analyze the report for actionable findings.
+        """
+        # Replace the prompts.get_instructions_analyze_findings() call with a direct prompt template
+        instructions = """Please analyze the following radiology report and identify any critical or actionable findings. 
+        For each finding, provide:
+        - The specific finding
+        - Urgency level (Critical, Urgent, Routine)
+        - Recommended action/follow-up
+
+        Format the response as a JSON list of dictionaries with keys: "finding", "urgency", "recommendation"
+
+        Example:
+        [
+            {{"finding": "Pneumothorax", "urgency": "Critical", "recommendation": "Immediate intervention required"}},
+            {{"finding": "Fracture", "urgency": "Urgent", "recommendation": "Refer for further evaluation"}}
+        ]
+
+        Report:
+        {report}
+        """
+       
+        return instructions
+    
