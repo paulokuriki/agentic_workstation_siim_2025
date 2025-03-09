@@ -29,6 +29,7 @@ class ActionableFindings(Toolkit):
         self.register(self.search_actionable_findings)
         self.register(self.send_notification)
         self.register(self._update_notification_email)
+        self.register(self.get_notification_email)
 
     def _generate_actionable_findings_prompt(self, report: str) -> str:
         """
@@ -78,42 +79,68 @@ class ActionableFindings(Toolkit):
             print(f"Unexpected error: {str(e)}")
             return "[]"
 
-    def send_notification(self, findings: str) -> str:
-        print(f"Received findings: {findings}")
-        print(f"Findings type: {type(findings)}")
-        # ... rest of the existing code ...
+    def send_notification(self, findings: str, email: str = None) -> str:
         """
         Sends email notifications for critical findings using SendGrid.
         Args:
-            findings: JSON string containing finding details
+            findings: JSON string containing finding details or plain text finding
+            email: Optional email address to override the default one
             
         Returns:
-            str: JSON string of "True" if notification sent successfully, "False" otherwise
+            str: JSON string with success status and additional information
         """
+        print(f"Received findings: {findings}")
+        print(f"Findings type: {type(findings)}")
+        
+        # Process findings into a proper list structure
         try:
-            # First, check if findings is a string containing JSON or just a plain string
             if isinstance(findings, str):
                 try:
+                    # Try to parse as JSON
                     findings_list = json.loads(findings)
+                    # If it's a dict with a "findings" key, extract it
+                    if isinstance(findings_list, dict) and "findings" in findings_list:
+                        findings_list = findings_list["findings"]
+                    # Ensure findings_list is a list
+                    if not isinstance(findings_list, list):
+                        findings_list = [findings_list]
                 except json.JSONDecodeError:
-                    # If it's not valid JSON, create a proper structure
+                    # If not valid JSON, treat as plain text
                     findings_list = [{
                         "finding": findings,
                         "urgency": "High",
                         "recommendation": "Please review"
                     }]
             else:
-                findings_list = findings
+                # If not a string, convert to a list if needed
+                findings_list = findings if isinstance(findings, list) else [findings]
+            
+            print(f"Processed findings: {findings_list}")
+        except Exception as e:
+            print(f"Error processing findings: {str(e)}")
+            findings_list = [{
+                "finding": str(findings),
+                "urgency": "High",
+                "recommendation": "Please review"
+            }]
 
+        # Get SendGrid API key
+        api_key = os.environ.get('SENDGRID_API_KEY')
+        if not api_key:
+            print("SendGrid API key not found in environment variables")
+            return json.dumps({"success": False, "error": "no_api_key"})
+
+        # Use provided email if available, otherwise use the one from session state
+        recipient_email = email if email else st.session_state.get('notification_email')
+        
+        # If no email is available, return an error
+        if not recipient_email:
+            print("No recipient email available")
+            return json.dumps({"success": False, "error": "no_email"})
+        
+        try:
             from sendgrid import SendGridAPIClient
             from sendgrid.helpers.mail import Mail
-
-            api_key = os.environ.get('SENDGRID_API_KEY')
-            if not api_key:
-                print("SendGrid API key not found in environment variables")
-                return json.dumps(False)
-
-            recipient_email = st.session_state.get('notification_email', 'eduardofarina61@gmail.com')
             
             message = Mail(
                 from_email='eduardofarinaservicosmedicos@gmail.com',
@@ -127,14 +154,13 @@ class ActionableFindings(Toolkit):
             
             if response.status_code == 202:
                 print(f"Email notification sent successfully to {recipient_email}!")
-                return json.dumps(True)
+                return json.dumps({"success": True, "email": recipient_email})
             else:
                 print(f"Unexpected response code: {response.status_code}")
-                return json.dumps(False)
-            
+                return json.dumps({"success": False, "error": f"send_failed_code_{response.status_code}"})
         except Exception as e:
-            print(f"Failed to send notification: {str(e)}")
-            return json.dumps(False)
+            print(f"Error sending email: {str(e)}")
+            return json.dumps({"success": False, "error": str(e)})
 
     def _format_email_content(self, findings: List[Dict]) -> str:
         """
@@ -179,6 +205,19 @@ class ActionableFindings(Toolkit):
             print(f"Failed to update notification email: {str(e)}")
             return json.dumps(False)
 
+    def get_notification_email(self) -> str:
+        """
+        Gets the current notification email address from session state.
+        
+        Returns:
+            str: JSON string containing the current email address
+        """
+        try:
+            email = st.session_state.get('notification_email', '')
+            return json.dumps(email)
+        except Exception as e:
+            print(f"Failed to get notification email: {str(e)}")
+            return json.dumps('')
 
 if __name__ == "__main__":
     agent = ActionableFindings()

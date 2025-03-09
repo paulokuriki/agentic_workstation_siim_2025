@@ -48,6 +48,7 @@ class Streamlit:
             "📝 **`make changes to report`**": "Make changes to report",
             "⚡ **`identify findings in report`**": "Identify significant findings in report",
             "✅ **`sign report`**": "Sign report",
+            "🔔 **`send notification`**": "Send notification",
         }
 
         def run_button_command(command):
