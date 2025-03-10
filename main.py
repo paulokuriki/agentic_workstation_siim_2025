@@ -56,7 +56,7 @@ if "notification_email" not in st.session_state:
 if "df_chart" not in st.session_state:
     st.session_state.df_chart = None
 
-tab_workstation, tab_emr = st.tabs(["🏥 **AI Workstation**", "📂 **Access do Electronic Medical Records**"])
+tab_workstation, tab_emr = st.tabs(["🏥 **AI Workstation**", "📂 **Access Electronic Medical Records**"])
 
 with tab_workstation:
     # --- HEADER ---

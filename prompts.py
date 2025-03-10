@@ -170,7 +170,8 @@ IMPRESSION:
         Generates a prompt to analyze the report for actionable findings.
         """
         # Replace the prompts.get_instructions_analyze_findings() call with a direct prompt template
-        instructions = """Please analyze the following radiology report and identify any critical or actionable findings. 
+        instructions = """Please analyze the following radiology report and identify any critical or actionable findings.
+        A report may have findings and an impression. Make sure you are not notifying the same findings twice because they appear in both findings and impression. 
         For each finding, provide:
         - The specific finding
         - Urgency level (Critical, Urgent, Routine)

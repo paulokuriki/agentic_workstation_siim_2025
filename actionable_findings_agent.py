@@ -143,9 +143,9 @@ class ActionableFindings(Toolkit):
             from sendgrid.helpers.mail import Mail
             
             message = Mail(
-                from_email='eduardofarinaservicosmedicos@gmail.com',
+                from_email='"Agentic Workstation Notifier" <eduardofarinaservicosmedicos@gmail.com>',
                 to_emails=recipient_email,
-                subject='Critical Radiology Findings Alert',
+                subject='[Agentic Notifier] Actionable Findings Alert',
                 html_content=self._format_email_content(findings_list)
             )
             
