@@ -14,6 +14,7 @@ from prompts import Prompts
 from report_agent import ReportAgent
 from database import Database
 from emr_loader import search_records
+from call_functions import load_case
 
 import constants as c
 
@@ -55,7 +56,7 @@ if "notification_email" not in st.session_state:
 if "df_chart" not in st.session_state:
     st.session_state.df_chart = None
 
-tab_workstation, tab_emr = st.tabs(["🏥 AI Workstation", "📂 Access do Electronic Medical Records"])
+tab_workstation, tab_emr = st.tabs(["🏥 **AI Workstation**", "📂 **Access do Electronic Medical Records**"])
 
 with tab_workstation:
     # --- HEADER ---
@@ -72,14 +73,15 @@ with tab_workstation:
             sample_case_url = "https://upload.wikimedia.org/wikipedia/commons/a/a1/Normal_posteroanterior_%28PA%29_chest_radiograph_%28X-ray%29.jpg"
             for idx, row in st.session_state.cases_df.iterrows():
                 with cols_cases[idx]:
-                    if st.button(f'**Case**:  {row["id"]}', key=f'select_{row["id"]}'):
-                        st.session_state.image_url = row["url"]
-                        st.session_state.study_id = row["id"]
-                        st.session_state["history"].append(
-                            {"user_message": None,
-                             "assistant_message": f"📋 Now viewing case {row['id']}. How can I assist you?",
-                             "reasoning": None})
-                        st.session_state.report_text = ""
+                    if st.button(f'**Study ID**:  {row["id"]}', key=f'select_{row["id"]}'):
+                        load_case(row["id"])
+                        #st.session_state.image_url = row["url"]
+                        #st.session_state.study_id = row["id"]
+                        #st.session_state["history"].append(
+                        #    {"user_message": None,
+                        #     "assistant_message": f"📋 Now viewing case {row['id']}. How can I assist you?",
+                        #     "reasoning": None})
+                        #st.session_state.report_text = ""
                         st.rerun()
 
             st.divider()
@@ -93,6 +95,8 @@ with tab_workstation:
                 url = st.text_input("Enter image URL:")
                 img = st_aux.load_image_from_url(url)  # if url else None
                 st.session_state.image_url = url
+                st.session_state.study_id = ""
+                st.session_state.report_text = ""
 
             if img:
                 st.image(img, use_container_width=True, )

@@ -12,14 +12,17 @@ def load_case(case_number: int) -> str:
         if row["id"] == case_number:
             # Update session state
             st.session_state.image_url = row["url"]
+            st.session_state.study_id = row["id"]
+            st.session_state.report_text = ""
+
             st.session_state["history"].append(
                 {
                     "user_message": None,
-                    "assistant_message": f"📋 Now viewing {row['id']}. How can I assist you?",
+                    "assistant_message": f"Now viewing Study ID {row['id']}. How can I assist you?",
                     "reasoning": None
                 }
             )
-            st.session_state.report_text = ""
+
 
             return json.dumps(True)
 
