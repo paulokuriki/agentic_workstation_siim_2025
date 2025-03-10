@@ -49,6 +49,7 @@ class Streamlit:
             "⚡ **`identify findings in report`**": "Identify significant findings in report",
             "✅ **`sign report`**": "Sign report",
             "🔔 **`send notification`**": "Send notification",
+            "📂 **`load EMR`**": "Retrieve and summarize patient clinical history",
         }
 
         def run_button_command(command):

@@ -74,6 +74,7 @@ with tab_workstation:
                 with cols_cases[idx]:
                     if st.button(f'**Case**:  {row["id"]}', key=f'select_{row["id"]}'):
                         st.session_state.image_url = row["url"]
+                        st.session_state.study_id = row["id"]
                         st.session_state["history"].append(
                             {"user_message": None,
                              "assistant_message": f"📋 Now viewing case {row['id']}. How can I assist you?",

@@ -7,6 +7,7 @@ from agno.models.google import Gemini
 from agno.agent import Agent
 from agno.tools.duckduckgo import DuckDuckGoTools
 from call_functions import load_case, list_available_cases
+from emr_loader import get_clinical_data_from_patient
 
 from constants import LLM_MODEL_WORKFLOW_AGENT
 
@@ -90,7 +91,7 @@ class LLM():
         new_agent = Agent(
             name="Web Agent",
             model=self.model,
-            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), ActionableFindings(), load_case, list_available_cases],
+            tools=[DuckDuckGoTools(), ImageInterpreterAgent(), ReportAgent(), ActionableFindings(), load_case, list_available_cases, get_clinical_data_from_patient],
             show_tool_calls=True,
             markdown=True,
             read_tool_call_history=True,
