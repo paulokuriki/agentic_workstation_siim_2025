@@ -48,7 +48,7 @@ if "image_url" not in st.session_state:
     st.session_state.image_url = None
 
 if "notification_email" not in st.session_state:
-    st.session_state.notification_email = "eduardofarina61@gmail.com"  # default email
+    st.session_state.notification_email = None  # default email
 
 # --- HEADER ---
 st.title("🏥 AI-Powered Radiology Workstation")
@@ -107,15 +107,6 @@ with col3:
     with st.container(border=True, height=container_height):
         st.subheader("🤖 AI Copilot")
         
-        # Add email configuration expander
-        with st.expander("⚙️ Notification Settings"):
-            st.session_state.notification_email = st.text_input(
-                "Email for notifications:",
-                value=st.session_state.notification_email,
-                placeholder="Enter email address",
-                help="Enter the email address where you want to receive critical findings notifications"
-            )
-
         container_internal_height = 235
         with st.container(height=container_height - container_internal_height):
             for interaction in st.session_state["history"]:
